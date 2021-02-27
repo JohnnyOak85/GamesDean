@@ -1,5 +1,5 @@
 import { Message } from 'discord.js';
-import { banUser, hasMember } from '../helpers/member.helper';
+import { banUser, checkMember } from '../helpers/member.helper';
 
 module.exports = {
   name: 'ban',
@@ -10,20 +10,29 @@ module.exports = {
   execute: async (message: Message, args: string[]): Promise<void> => {
     try {
       if (!message.member?.hasPermission('BAN_MEMBERS')) {
-        await message.channel.send('You do not have permission for this command.');
+        message.channel.send('You do not have permission for this command.');
 
         return;
       }
 
-      let reply = args.slice(1).join(' ');
+      let reason = args.slice(1).join(' ');
 
-      if (!reply) reply = 'No reason provided.';
+      if (!reason) reason = 'No reason provided.';
 
       for await (const member of message.mentions.members?.array() || []) {
         try {
-          if (!(await hasMember(message.member, member, message.channel))) return;
+          const warning = checkMember(message.member, member);
 
-          banUser(member, message.guild?.systemChannel, reply, args[0]);
+          if (warning) {
+            message.channel.send(warning);
+            return;
+          }
+
+          const reply = await banUser(member, reason, args[0]);
+
+          if (!reply) return;
+
+          message.guild?.systemChannel?.send(reply);
         } catch (error) {
           throw error;
         }

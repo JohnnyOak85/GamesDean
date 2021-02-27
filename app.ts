@@ -21,13 +21,13 @@ bot.on('message', async (message) => {
     const command = commands.get(commandName);
 
     if (!command) {
-      await message.channel.send('Invalid command.');
+      message.channel.send('Invalid command.');
       return;
     }
 
     await command.execute(message, args);
   } catch (error) {
-    await message.channel.send('There was an error trying to execute that command!');
+    message.channel.send('There was an error trying to execute that command!');
     logError(error);
   }
 });

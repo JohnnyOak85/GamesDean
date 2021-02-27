@@ -4,5 +4,6 @@ interface User {
   nickname?: string | null;
   roles?: string[];
   strikes?: string[];
+  timer?: string;
   username?: string;
 }

@@ -1,13 +1,17 @@
-import { PermissionString } from 'discord.js';
+import { PermissionResolvable } from 'discord.js';
+
+interface RoleList {
+  [name: string]: RoleSchema;
+}
 
 interface PermissionList {
   [name: string]: boolean;
 }
 
 interface RoleSchema {
-  activePermissions: PermissionString[];
+  activePermissions: PermissionResolvable;
   inactivePermissions: PermissionList;
   name: string;
 }
 
-export { PermissionList, RoleSchema };
+export { PermissionList, RoleList, RoleSchema };

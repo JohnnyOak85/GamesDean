@@ -1,4 +1,5 @@
 import { GuildMemberRoleManager, Role, RoleManager, TextChannel } from 'discord.js';
+import { RoleList } from '../models/role.model';
 import { logInfo } from './logs.helper';
 
 /**
@@ -8,11 +9,11 @@ import { logInfo } from './logs.helper';
  */
 const createRole = async (roleManager: RoleManager, roleName: string, channel: TextChannel | null | undefined): Promise<Role> => {
   try {
-    const permissions = {};
+    const roleSchemaList: RoleList = require('../config.json');
     const role = await roleManager.create({
       data: {
-        name: roleName
-        // permissions: permissions,
+        name: roleName,
+        permissions: roleSchemaList[roleName].activePermissions
       }
     });
 
@@ -30,8 +31,13 @@ const createRole = async (roleManager: RoleManager, roleName: string, channel: T
  * @param roleManager
  * @param roleName
  */
-const getRole = async (roleManager: RoleManager, roleName: string, channel: TextChannel | null | undefined): Promise<Role> => {
+const getRole = async (
+  roleManager: RoleManager | undefined,
+  roleName: string,
+  channel: TextChannel | null | undefined
+): Promise<Role | void> => {
   try {
+    if (!roleManager) return;
     const role = roleManager.cache.find((guildRole) => guildRole.name === roleName);
 
     if (!role) return await createRole(roleManager, roleName, channel);
@@ -53,9 +59,11 @@ const giveRole = async (
   roleName: string,
   userRoleManager: GuildMemberRoleManager,
   channel: TextChannel | null | undefined
-): Promise<any> => {
+): Promise<void> => {
   try {
     const role = await getRole(roleManager, roleName, channel);
+
+    if (!role) return;
 
     if (userRoleManager.cache.has(role.id)) return;
 
@@ -82,6 +90,8 @@ const removeRole = async (
 ): Promise<void> => {
   try {
     const role = await getRole(roleManager, roleName, channel);
+
+    if (!role) return;
 
     if (!userRoleManager.cache.has(role.id)) return;
 

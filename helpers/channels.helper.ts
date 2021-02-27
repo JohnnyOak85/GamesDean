@@ -8,17 +8,19 @@ import { logInfo } from './logs.helper';
  * @param channelSchema
  */
 const createChannel = async (
-  channelManager: GuildChannelManager,
+  channelManager: GuildChannelManager | undefined,
   channelSchema: ChannelSchema,
   systemChannel: TextChannel | null | undefined
-): Promise<GuildChannel> => {
+): Promise<GuildChannel | undefined> => {
   try {
+    if (!channelManager) return;
+
     const channel = await channelManager.create(channelSchema.name, {
       type: channelSchema.type
     });
 
-    systemChannel?.send(`Created new channel <#${channel.id}>!`);
-    logInfo(`Created channel ${channelSchema.name} on ${channelManager.guild.name}.`);
+    systemChannel?.send(`Created new channel <#${channel?.id}>!`);
+    logInfo(`Created channel ${channelSchema.name} on ${channelManager?.guild.name}.`);
 
     return channel;
   } catch (error) {
@@ -32,11 +34,13 @@ const createChannel = async (
  * @param channelSchema
  */
 const getChannel = async (
-  channelManager: GuildChannelManager,
+  channelManager: GuildChannelManager | undefined,
   channelSchema: ChannelSchema,
   systemChannel: TextChannel | null | undefined
-): Promise<GuildChannel> => {
+): Promise<GuildChannel | void> => {
   try {
+    if (!channelManager) return;
+    
     const channel = channelManager.cache.find((guildChannel) => guildChannel.name === channelSchema.name);
 
     if (!channel) return await createChannel(channelManager, channelSchema, systemChannel);

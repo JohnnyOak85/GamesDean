@@ -10,7 +10,7 @@ ensureDirSync('C:/database/users'); // TODO Maybe don't do this?
  */
 const readDirectory = async (path: string): Promise<string[]> => {
   try {
-    return readdirSync(`${__dirname}/${path}`);
+    return readdirSync(`${databaseDir}/${path}`);
   } catch (error) {
     throw error;
   }

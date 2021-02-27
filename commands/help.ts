@@ -19,7 +19,7 @@ module.exports = {
         for (const command of commands.array()) {
           if (!isVerified && command.moderation) return;
 
-          reply.push(` * !${command.name}`);
+          reply.push(` * ${PREFIX}${command.name}`);
         }
 
         reply.join('\n');
@@ -32,7 +32,7 @@ module.exports = {
       const command = commands.get(args[0].toLowerCase());
 
       if (!command) {
-        await message.channel.send('That command does not exist.');
+        message.channel.send('That command does not exist.');
         return;
       }
 
@@ -40,7 +40,7 @@ module.exports = {
       reply.push(`**Description:** ${command.description}`);
       reply.push(`**Usage:** ${PREFIX}${command.name} ${command.usage}`);
 
-      await message.channel.send(reply);
+      message.channel.send(reply);
 
       return;
     } catch (error) {

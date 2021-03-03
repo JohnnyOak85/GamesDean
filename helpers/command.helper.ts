@@ -3,7 +3,10 @@ import { readdirSync } from 'fs-extra';
 
 const commands = new Collection<string, Command>();
 
-const getCommands = () => {
+/**
+ * @description Returns the command list.
+ */
+const getCommands = (): Collection<string, Command> => {
   try {
     if (!commands.array().length) setCommands();
 
@@ -13,7 +16,10 @@ const getCommands = () => {
   }
 };
 
-const setCommands = () => {
+/**
+ * @description Builds the command list.
+ */
+const setCommands = (): void => {
   try {
     const commandList = readdirSync(`${__dirname}/../commands`);
 

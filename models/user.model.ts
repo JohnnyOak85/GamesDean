@@ -1,4 +1,4 @@
-interface User {
+interface UserDoc {
   _id?: string;
   banned?: boolean;
   nickname?: string | null;

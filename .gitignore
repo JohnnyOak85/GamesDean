@@ -2,5 +2,6 @@
 /logs
 /dist
 /database
+/configurations
 
 config.json

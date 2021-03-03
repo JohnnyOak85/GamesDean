@@ -1,6 +1,6 @@
 import { Message } from 'discord.js';
 import { getInvite } from '../helpers/invite.helper';
-import { banUser, checkMember, getUserByUsername } from '../helpers/member.helper';
+import { checkMember, getUserByUsername } from '../helpers/member.helper';
 
 module.exports = {
   name: 'unban',
@@ -23,7 +23,7 @@ module.exports = {
 
       for await (const username of args) {
         try {
-          const user = await getUserByUsername(username);
+          const user = await getUserByUsername(message.guild?.id || '', username);
 
           if (!user) {
             message.channel.send(`I have no record of ${username}.`);
@@ -52,7 +52,7 @@ module.exports = {
           message.guild?.systemChannel?.send(`${banned.user.username} is no longer banned.`);
 
           const DMChannel = await banned.user.createDM();
-          const invite = getInvite(await message.guild?.fetchInvites());
+          const invite = getInvite(message.guild, 'general-chat');
 
           DMChannel.send(`You are no longer banned from ${message.guild?.name}\n${invite}`);
         } catch (error) {

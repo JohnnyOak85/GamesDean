@@ -14,7 +14,7 @@ module.exports = {
       }
 
       if (!message.mentions.members?.array().length) {
-        const reply = await listWarnings();
+        const reply = await listWarnings(message.guild?.id || '');
 
         message.channel.send(reply);
         return;

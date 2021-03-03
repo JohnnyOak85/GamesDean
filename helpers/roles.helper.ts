@@ -1,5 +1,4 @@
-import { GuildMemberRoleManager, Role, RoleManager, TextChannel } from 'discord.js';
-import { RoleList } from '../models/role.model';
+import { ClientUser, Guild, PermissionResolvable, Role, RoleManager, TextChannel } from 'discord.js';
 import { logInfo } from './logs.helper';
 
 /**
@@ -7,13 +6,17 @@ import { logInfo } from './logs.helper';
  * @param roleManager
  * @param roleName
  */
-const createRole = async (roleManager: RoleManager, roleName: string, channel: TextChannel | null | undefined): Promise<Role> => {
+const createRole = async (
+  roleManager: RoleManager,
+  roleName: string,
+  permissions: PermissionResolvable,
+  channel: TextChannel | null | undefined
+): Promise<Role> => {
   try {
-    const roleSchemaList: RoleList = require('../config.json');
     const role = await roleManager.create({
       data: {
         name: roleName,
-        permissions: roleSchemaList[roleName].activePermissions
+        permissions: permissions
       }
     });
 
@@ -34,13 +37,14 @@ const createRole = async (roleManager: RoleManager, roleName: string, channel: T
 const getRole = async (
   roleManager: RoleManager | undefined,
   roleName: string,
+  permissions: PermissionResolvable,
   channel: TextChannel | null | undefined
 ): Promise<Role | void> => {
   try {
     if (!roleManager) return;
     const role = roleManager.cache.find((guildRole) => guildRole.name === roleName);
 
-    if (!role) return await createRole(roleManager, roleName, channel);
+    if (!role) return await createRole(roleManager, roleName, permissions, channel);
 
     return role;
   } catch (error) {
@@ -49,59 +53,22 @@ const getRole = async (
 };
 
 /**
- * @description Gives a specific role to a user.
- * @param roleManager
- * @param roleName
- * @param userRoleManager
+ * @description Ensures the bot has the correct role.
+ * @param guildList
+ * @param bot
  */
-const giveRole = async (
-  roleManager: RoleManager,
-  roleName: string,
-  userRoleManager: GuildMemberRoleManager,
-  channel: TextChannel | null | undefined
-): Promise<void> => {
+const promote = async (guild: Guild, bot: ClientUser | null): Promise<void> => {
   try {
-    const role = await getRole(roleManager, roleName, channel);
+    const botUser = await guild.members.fetch(bot || '');
+    const role = await getRole(guild.roles, 'bot', ['ADMINISTRATOR'], guild.systemChannel);
 
-    if (!role) return;
-
-    if (userRoleManager.cache.has(role.id)) return;
-
-    await userRoleManager.add(role);
-
-    channel?.send(`${userRoleManager.member.nickname} is now ${roleName}.`);
-    logInfo(`Gave role ${roleName} to ${userRoleManager.member.nickname}.`);
+    if (role && !guild.roles.cache.has(role.id)) {
+      botUser.roles.add(role);
+      logInfo(`Bot has full moderator privileges.`);
+    }
   } catch (error) {
     throw error;
   }
 };
 
-/**
- * @description Removes a specific role from a user.
- * @param roleManager
- * @param roleName
- * @param userRoleManager
- */
-const removeRole = async (
-  roleManager: RoleManager,
-  roleName: string,
-  userRoleManager: GuildMemberRoleManager,
-  channel: TextChannel | null | undefined
-): Promise<void> => {
-  try {
-    const role = await getRole(roleManager, roleName, channel);
-
-    if (!role) return;
-
-    if (!userRoleManager.cache.has(role.id)) return;
-
-    await userRoleManager.remove(role);
-
-    channel?.send(`${userRoleManager.member.nickname} is no longer ${roleName}.`);
-    logInfo(`Removed role ${roleName} from ${userRoleManager.member.nickname}.`);
-  } catch (error) {
-    throw error;
-  }
-};
-
-export { createRole, getRole, giveRole, removeRole };
+export { getRole, promote };

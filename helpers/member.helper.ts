@@ -1,6 +1,6 @@
 import { GuildMember, User } from 'discord.js';
 import { getDoc, readDirectory, saveDoc } from './storage.helper';
-import { addTime, getTime } from './time.helper';
+import { addTime } from './time.helper';
 import { MAX_STRIKES, MUTE_PERMISSIONS } from '../config.json';
 import { getRole } from './roles.helper';
 import { updatePermissions } from './channels.helper';

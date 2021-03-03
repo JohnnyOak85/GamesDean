@@ -2,6 +2,9 @@ import { Client } from 'discord.js';
 import { logError, logInfo } from './helpers/logs.helper';
 import { getCommands } from './helpers/command.helper';
 import { PREFIX, TOKEN } from './config.json';
+import { promote } from './helpers/roles.helper';
+import { buildDatabase } from './helpers/storage.helper';
+import { buildInfoCategory } from './helpers/channels.helper';
 
 const bot = new Client();
 const commands = getCommands();
@@ -10,6 +13,12 @@ bot.login(TOKEN);
 
 bot.on('ready', () => {
   logInfo(`The bot went online.`);
+
+  for (const guild of bot.guilds.cache.array()) {
+    promote(guild, bot.user);
+    buildDatabase(guild);
+    buildInfoCategory(guild);
+  }
 });
 
 bot.on('message', async (message) => {

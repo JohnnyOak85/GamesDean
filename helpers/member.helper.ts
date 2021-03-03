@@ -1,15 +1,31 @@
-import { GuildMember } from 'discord.js';
-import { getDoc, readDirectory, saveDoc } from './files.helper';
+import { GuildMember, User } from 'discord.js';
+import { getDoc, readDirectory, saveDoc } from './storage.helper';
 import { addTime, getTime } from './time.helper';
-import { MAX_STRIKES } from '../config.json';
+import { MAX_STRIKES, MUTE_PERMISSIONS } from '../config.json';
 import { getRole } from './roles.helper';
+import { updatePermissions } from './channels.helper';
+import { getNumber } from './utils.helper';
+
+/**
+ * @description Creates a user object from a banned user.
+ * @param user
+ * @param reason
+ */
+const buildBannedUser = (user: User, reason: string): UserDoc => {
+  return {
+    _id: user.id,
+    roles: [],
+    strikes: [reason],
+    username: user.username
+  };
+};
 
 /**
  * @description Guarantees the user document has all needed proprieties.
  * @param user
  * @param member
  */
-const ensureDoc = (user: User, member: GuildMember): User => {
+const ensureDoc = (user: UserDoc, member: GuildMember): UserDoc => {
   if (!user._id) user._id = member.id;
   if (!user.username) user.username = member.user.username;
   if (!user.strikes) user.strikes = [];
@@ -23,9 +39,9 @@ const ensureDoc = (user: User, member: GuildMember): User => {
  * @description Returns a user document from the database.
  * @param member
  */
-const getUser = async (member: GuildMember): Promise<User> => {
+const getUser = async (member: GuildMember): Promise<UserDoc> => {
   try {
-    const userDoc = await getDoc(`users/${member.user.id}`);
+    const userDoc = await getDoc(`${member.guild.id}/${member.user.id}`);
 
     return ensureDoc(userDoc, member);
   } catch (error) {
@@ -47,7 +63,7 @@ const kickUser = async (member: GuildMember, reason: string): Promise<string> =>
 
     if (!user.strikes?.includes(reason)) user.strikes?.push(reason);
 
-    saveDoc(`users/${member.user.username}`, user);
+    saveDoc(`${member.guild.id}/${member.user.username}`, user);
 
     return `${member.displayName} has been kicked.\n${reason}`;
   } catch (error) {
@@ -64,7 +80,7 @@ const kickUser = async (member: GuildMember, reason: string): Promise<string> =>
 const banUser = async (member: GuildMember, reason: string, time?: string): Promise<string> => {
   try {
     const user = await getUser(member);
-    const days = getTime(time || '');
+    const days = getNumber(time || '');
     const DMChannel = await member.createDM();
 
     // member.ban({ days, reason }); // TODO Reactivate.
@@ -74,7 +90,7 @@ const banUser = async (member: GuildMember, reason: string, time?: string): Prom
 
     delete user.roles;
 
-    saveDoc(`users/${member.user.id}`, user);
+    saveDoc(`${member.guild.id}/${member.user.id}`, user);
 
     DMChannel.send(`You have been banned from ${member.guild.name}.\n${reason}`);
 
@@ -84,13 +100,22 @@ const banUser = async (member: GuildMember, reason: string, time?: string): Prom
   }
 };
 
-const muteUser = async (member: GuildMember, reason: string, time?: string): Promise<string | void> => {
+/**
+ * @description Gives a user the muted role, which makes it impossible to send messages to the guild.
+ * @param member
+ * @param reason
+ * @param time
+ */
+const muteUser = async (member: GuildMember, reason: string, time?: string): Promise<string | undefined> => {
   try {
     const user = await getUser(member);
-    const role = await getRole(member.guild.roles, 'Muted', member.guild.systemChannel);
-    const minutes = getTime(time || '');
+    const role = await getRole(member.guild.roles, 'Muted', ['VIEW_CHANNEL', 'READ_MESSAGE_HISTORY'], member.guild.systemChannel);
+    const minutes = getNumber(time || '');
 
     if (!role) return;
+
+    updatePermissions(member.guild.channels, role, MUTE_PERMISSIONS);
+
     if (minutes) {
       reason = reason.replace(minutes.toString() || '', '');
       reason = `${reason} for ${minutes} minutes.`;
@@ -98,12 +123,10 @@ const muteUser = async (member: GuildMember, reason: string, time?: string): Pro
     }
 
     if (!user.strikes?.includes(reason)) user.strikes?.push(reason);
-
     if (!member.roles.cache.has(role.id)) await member.roles.add(role);
-
     if (!user.roles?.includes(role.id)) user.roles?.push(role.id);
 
-    saveDoc(`users/${member.user.id}`, user);
+    saveDoc(`${member.guild.id}/${member.user.id}`, user);
 
     return `${member.displayName} has been muted.\n${reason}`;
   } catch (error) {
@@ -111,10 +134,14 @@ const muteUser = async (member: GuildMember, reason: string, time?: string): Pro
   }
 };
 
-const unmuteUser = async (member: GuildMember) => {
+/**
+ * @description Removes the mute role from the user, allowing them to once again send messages to the guild.
+ * @param member
+ */
+const unmuteUser = async (member: GuildMember): Promise<string | undefined> => {
   try {
     const user = await getUser(member);
-    const role = await getRole(member.guild.roles, 'Muted', member.guild.systemChannel);
+    const role = await getRole(member.guild.roles, 'Muted', ['VIEW_CHANNEL', 'READ_MESSAGE_HISTORY'], member.guild.systemChannel);
 
     if (!role) return;
 
@@ -122,7 +149,7 @@ const unmuteUser = async (member: GuildMember) => {
 
     if (user.roles?.includes(role.id)) user.roles.splice(user.roles.indexOf(role.id), 1);
 
-    saveDoc(`users/${member.user.id}`, user);
+    saveDoc(`${member.guild.id}/${member.user.id}`, user);
 
     return `${member.displayName} has been unmuted.`;
   } catch (error) {
@@ -130,6 +157,11 @@ const unmuteUser = async (member: GuildMember) => {
   }
 };
 
+/**
+ * @description Adds a warning to the user's warning list.
+ * @param member
+ * @param reason
+ */
 const warnUser = async (member: GuildMember, reason: string): Promise<string> => {
   try {
     const user = await getUser(member);
@@ -141,7 +173,7 @@ const warnUser = async (member: GuildMember, reason: string): Promise<string> =>
     if (user.strikes?.length && user.strikes?.length >= MAX_STRIKES / 2)
       return (await muteUser(member, `Warned ${MAX_STRIKES / 2} times, better watch it!`)) || '';
 
-    saveDoc(`users/${member.user.username}`, user);
+    saveDoc(`${member.guild.id}/${member.user.username}`, user);
 
     return `${member.displayName} has been warned.\n${reason}`;
   } catch (error) {
@@ -149,7 +181,12 @@ const warnUser = async (member: GuildMember, reason: string): Promise<string> =>
   }
 };
 
-const forgiveUser = async (member: GuildMember, amount: string): Promise<string | void> => {
+/**
+ * @description Removes one or more warnings from the user's warning list.
+ * @param member
+ * @param amount
+ */
+const forgiveUser = async (member: GuildMember, amount: string): Promise<string | undefined> => {
   try {
     const user = await getUser(member);
     const amountNumber = parseInt(amount);
@@ -170,13 +207,17 @@ const forgiveUser = async (member: GuildMember, amount: string): Promise<string 
   }
 };
 
-const listWarnings = async (): Promise<string> => {
+/**
+ * @description Returns the list of users with warnings.
+ * @param guildId
+ */
+const listWarnings = async (guildId: string): Promise<string> => {
   try {
-    const userList = await readDirectory(`users`); // TODO Preface it with the guild id/name.
+    const userList = await readDirectory(guildId); // TODO Preface it with the guild id/name.
     const warningsList = [];
 
     for await (const username of userList) {
-      const userDoc = await getDoc(`users/${username}`);
+      const userDoc = await getDoc(`${guildId}/${username}`);
       if (userDoc.strikes?.length) warningsList.push(`${username} - ${userDoc.strikes.length}`);
     }
 
@@ -188,9 +229,14 @@ const listWarnings = async (): Promise<string> => {
   }
 };
 
-const getUserByUsername = async (username: string) => {
+/**
+ * @description Finds a user by the username.
+ * @param guildId
+ * @param username
+ */
+const getUserByUsername = async (guildId: string, username: string): Promise<UserDoc | undefined> => {
   try {
-    const userList = await readDirectory('users');
+    const userList = await readDirectory(guildId);
 
     for await (const user of userList) {
       const userDoc = await getDoc(`users/${user}`);
@@ -202,6 +248,10 @@ const getUserByUsername = async (username: string) => {
   }
 };
 
+/**
+ * @description Returns the list of a user's warnings.
+ * @param member
+ */
 const getUserWarnings = async (member: GuildMember): Promise<string> => {
   try {
     const user = await getUser(member);
@@ -220,6 +270,11 @@ const getUserWarnings = async (member: GuildMember): Promise<string> => {
   }
 };
 
+/**
+ * @description Checks if the member can be moderated.
+ * @param moderator
+ * @param member
+ */
 const checkMember = (moderator: GuildMember, member: GuildMember): string | void => {
   if (!member) return 'You need to mention a valid user.';
   if (moderator.user.id === member.user.id) return 'You cannot moderate yourself!';
@@ -228,6 +283,7 @@ const checkMember = (moderator: GuildMember, member: GuildMember): string | void
 
 export {
   banUser,
+  buildBannedUser,
   checkMember,
   forgiveUser,
   getUser,

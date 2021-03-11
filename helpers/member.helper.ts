@@ -1,5 +1,6 @@
-// Discord
-import { GuildMember, User } from 'discord.js';
+// Dependencies
+import { GuildMember, PartialGuildMember, User } from 'discord.js';
+import { difference } from 'lodash';
 
 // Helpers
 import { getDoc, readDirectory, saveDoc } from './storage.helper';
@@ -80,6 +81,11 @@ const checkMember = (moderator: GuildMember, member: GuildMember): string | void
   if (!member.manageable) return `You cannot moderate ${member.user.username}.`;
 };
 
+/**
+ * @description Records an anniversary date for a user.
+ * @param member
+ * @param date
+ */
 const addUserAnniversary = async (member: GuildMember, date: Date) => {
   try {
     const user = await getUser(member);
@@ -87,10 +93,30 @@ const addUserAnniversary = async (member: GuildMember, date: Date) => {
 
     saveDoc(`${member.guild.id}/${member.user.id}`, user);
 
-    return `The anniversary of ${member.displayName} has been recorded.\n${getDate(date)}`;
+    return `The anniversary of ${member.displayName} has been recorded.\n${getDate(date, 'MMMM Do YYYY')}`;
   } catch (error) {
     throw error;
   }
 };
 
-export { addUserAnniversary, buildBannedUser, checkMember, getUser, getUserByUsername };
+/**
+ * @description Checks for changes in the user to be added to the document.
+ * @param oldMember
+ * @param newMember
+ */
+const checkMemberChanges = async (oldMember: GuildMember | PartialGuildMember, newMember: GuildMember) => {
+  try {
+    const user = await getUser(newMember);
+    const newRole = difference(oldMember.roles.cache.array(), newMember.roles.cache.array());
+
+    if (newRole.length) user.roles?.push(newRole[0].id);
+
+    // TODO Check if nickname does not include illegal strings.
+    // If it does, newMember.setNickname(CENSORED_NICKNAME);
+    if (newMember.nickname !== oldMember.nickname) user.nickname = newMember.nickname;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export { addUserAnniversary, buildBannedUser, checkMember, checkMemberChanges, getUser, getUserByUsername };

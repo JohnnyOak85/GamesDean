@@ -1,7 +1,5 @@
-// Discord
+// Dependencies
 import { Guild } from 'discord.js';
-
-// FS-Extra
 import { ensureDirSync, pathExistsSync, readdirSync, readJsonSync, writeJsonSync } from 'fs-extra';
 
 // Helpers

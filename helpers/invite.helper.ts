@@ -1,8 +1,8 @@
-// Discord
+// Dependencies
 import { Guild, GuildChannelManager } from 'discord.js';
 
 /**
- * @description Creates a new permanent invite for the given channel, otherwise it finds the one for general-chat.
+ * @description Creates a new permanent invite for the given channel, otherwise it finds the one for general.
  * @param channelManager
  * @param channelName
  */
@@ -18,7 +18,7 @@ const createInvite = async (channelManager: GuildChannelManager, channelName: st
 };
 
 /**
- * @description Returns the guild's permanent invite.
+ * @description Returns a permanent invite for the given channel, otherwise it will default to the general channel..
  * @param inviteList
  */
 const getInvite = async (guild: Guild | null, channelName: string) => {

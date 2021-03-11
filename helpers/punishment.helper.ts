@@ -1,4 +1,4 @@
-// Discord
+// Dependencies
 import { GuildMember } from 'discord.js';
 
 // Helpers
@@ -9,7 +9,10 @@ import { getDoc, readDirectory, saveDoc } from './storage.helper';
 import { addTime, getNumber } from './utils.helper';
 
 // Configurations
-import { MAX_STRIKES, MUTE_PERMISSIONS } from '../config.json';
+import { MAX_STRIKES } from '../config.json';
+
+// Resources
+import { MUTED } from '../resources/roles';
 
 /**
  * @description Momentarily removes a user from the guild.
@@ -71,12 +74,12 @@ const banUser = async (member: GuildMember, reason: string, time?: string): Prom
 const muteUser = async (member: GuildMember, reason: string, time?: string): Promise<string | undefined> => {
   try {
     const user = await getUser(member);
-    const role = await getRole(member.guild.roles, 'Muted', ['VIEW_CHANNEL', 'READ_MESSAGE_HISTORY'], member.guild.systemChannel);
+    const role = await getRole(member.guild.roles, MUTED, member.guild.systemChannel);
     const minutes = getNumber(time || '');
 
     if (!role) return;
 
-    updatePermissions(member.guild.channels, role, MUTE_PERMISSIONS);
+    updatePermissions(member.guild.channels, role, MUTED.inactivePermissions);
 
     if (minutes) {
       reason = reason.replace(minutes.toString() || '', '');
@@ -103,7 +106,7 @@ const muteUser = async (member: GuildMember, reason: string, time?: string): Pro
 const unmuteUser = async (member: GuildMember): Promise<string | undefined> => {
   try {
     const user = await getUser(member);
-    const role = await getRole(member.guild.roles, 'Muted', ['VIEW_CHANNEL', 'READ_MESSAGE_HISTORY'], member.guild.systemChannel);
+    const role = await getRole(member.guild.roles, MUTED, member.guild.systemChannel);
 
     if (!role) return;
 

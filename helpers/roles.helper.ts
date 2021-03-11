@@ -1,8 +1,14 @@
-// Discord
-import { ClientUser, Guild, PermissionResolvable, Role, RoleManager, TextChannel } from 'discord.js';
+// Dependencies
+import { ClientUser, Guild, Role, RoleManager, TextChannel } from 'discord.js';
 
 // Helpers
 import { logInfo } from './utils.helper';
+
+// Models
+import { RoleSchema } from '../models/role.model';
+
+// Resources
+import { BOT } from '../resources/roles';
 
 /**
  * @description Creates a new role in the guild.
@@ -11,20 +17,19 @@ import { logInfo } from './utils.helper';
  */
 const createRole = async (
   roleManager: RoleManager,
-  roleName: string,
-  permissions: PermissionResolvable,
+  roleSchema: RoleSchema,
   channel: TextChannel | null | undefined
 ): Promise<Role> => {
   try {
     const role = await roleManager.create({
       data: {
-        name: roleName,
-        permissions: permissions
+        name: roleSchema.name,
+        permissions: roleSchema.activePermissions
       }
     });
 
-    channel?.send(`Created new role ${roleName}.`);
-    logInfo(`Created role ${roleName} on ${roleManager.guild.name}.`);
+    channel?.send(`Created new role ${roleSchema.name}.`);
+    logInfo(`Created role ${roleSchema.name} on ${roleManager.guild.name}.`);
 
     return role;
   } catch (error) {
@@ -39,15 +44,14 @@ const createRole = async (
  */
 const getRole = async (
   roleManager: RoleManager | undefined,
-  roleName: string,
-  permissions: PermissionResolvable,
+  roleSchema: RoleSchema,
   channel: TextChannel | null | undefined
 ): Promise<Role | void> => {
   try {
     if (!roleManager) return;
-    const role = roleManager.cache.find((guildRole) => guildRole.name === roleName);
+    const role = roleManager.cache.find((guildRole) => guildRole.name === roleSchema.name);
 
-    if (!role) return await createRole(roleManager, roleName, permissions, channel);
+    if (!role) return await createRole(roleManager, roleSchema, channel);
 
     return role;
   } catch (error) {
@@ -63,7 +67,7 @@ const getRole = async (
 const promote = async (guild: Guild, bot: ClientUser | null): Promise<void> => {
   try {
     const botUser = await guild.members.fetch(bot || '');
-    const role = await getRole(guild.roles, 'bot', ['ADMINISTRATOR'], guild.systemChannel);
+    const role = await getRole(guild.roles, BOT, guild.systemChannel);
 
     if (role && !guild.roles.cache.has(role.id)) {
       botUser.roles.add(role);

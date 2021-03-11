@@ -1,6 +1,11 @@
+// Discord
 import { Message } from 'discord.js';
-import { PREFIX } from '../config.json';
+
+// Helpers
 import { getCommands } from '../helpers/command.helper';
+
+// Configurations
+import { PREFIX } from '../config.json';
 
 module.exports = {
   name: 'help',

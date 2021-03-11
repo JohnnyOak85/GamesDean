@@ -1,5 +1,9 @@
+// Discord
 import { Message } from 'discord.js';
-import { checkMember, muteUser } from '../helpers/member.helper';
+
+// Helpers
+import { checkMember } from '../helpers/member.helper';
+import { muteUser } from '../helpers/punishment.helper';
 
 module.exports = {
   name: 'mute',

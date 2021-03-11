@@ -1,7 +1,12 @@
+// Discord
 import { Message } from 'discord.js';
-import { RULES } from '../config.json';
+
+// Helpers
 import { setRules } from '../helpers/channels.helper';
 import { getNumber } from '../helpers/utils.helper';
+
+// Configurations
+import { RULES } from '../config.json';
 
 module.exports = {
   name: 'unrule',

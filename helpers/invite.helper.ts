@@ -1,5 +1,11 @@
+// Discord
 import { Guild, GuildChannelManager } from 'discord.js';
 
+/**
+ * @description Creates a new permanent invite for the given channel, otherwise it finds the one for general-chat.
+ * @param channelManager
+ * @param channelName
+ */
 const createInvite = async (channelManager: GuildChannelManager, channelName: string) => {
   try {
     let channel = channelManager.cache.find((guildChannel) => guildChannel.name === channelName);

@@ -1,5 +1,9 @@
+// Discord
 import { Message } from 'discord.js';
-import { checkMember, forgiveUser } from '../helpers/member.helper';
+
+// Helpers
+import { checkMember } from '../helpers/member.helper';
+import { forgiveUser } from '../helpers/punishment.helper';
 
 module.exports = {
   name: 'forgive',

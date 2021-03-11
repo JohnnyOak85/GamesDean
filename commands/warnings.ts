@@ -1,5 +1,9 @@
+// Discord
 import { Message } from 'discord.js';
-import { checkMember, getUserWarnings, listWarnings } from '../helpers/member.helper';
+
+// Helpers
+import { checkMember } from '../helpers/member.helper';
+import { listWarnings, getUserWarnings } from '../helpers/punishment.helper';
 
 module.exports = {
   name: 'warnings',

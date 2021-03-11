@@ -1,5 +1,10 @@
+// Discord
 import { Message } from 'discord.js';
+
+// Helpers
 import { setRules } from '../helpers/channels.helper';
+
+// Configurations
 import { RULES } from '../config.json';
 
 module.exports = {

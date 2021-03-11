@@ -1,7 +1,14 @@
+// Discord
 import { Guild } from 'discord.js';
+
+// FS-Extra
 import { ensureDirSync, pathExistsSync, readdirSync, readJsonSync, writeJsonSync } from 'fs-extra';
-import { logInfo } from './logs.helper';
+
+// Helpers
 import { buildBannedUser, getUser } from './member.helper';
+import { logInfo } from './utils.helper';
+
+// Configurations
 import { DATABASE_DIR } from '../config.json';
 
 /**

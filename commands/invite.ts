@@ -1,4 +1,7 @@
+// Discord
 import { Message } from 'discord.js';
+
+// Helpers
 import { getInvite } from '../helpers/invite.helper';
 
 module.exports = {

@@ -1,5 +1,10 @@
+// Discord
 import { Guild, GuildChannel, GuildChannelManager, NewsChannel, PermissionOverwriteOption, Role, TextChannel } from 'discord.js';
-import { logInfo } from './logs.helper';
+
+// Helpers
+import { logInfo } from './utils.helper';
+
+// Configurations
 import { PERMISSIONS, RULES } from '../config.json';
 
 /**

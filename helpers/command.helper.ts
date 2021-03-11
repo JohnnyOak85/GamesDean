@@ -1,4 +1,7 @@
+// Discord
 import { Collection } from 'discord.js';
+
+// FS-Extra
 import { readdirSync } from 'fs-extra';
 
 const commands = new Collection<string, Command>();

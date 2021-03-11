@@ -1,5 +1,8 @@
+// Discord
 import { ClientUser, Guild, PermissionResolvable, Role, RoleManager, TextChannel } from 'discord.js';
-import { logInfo } from './logs.helper';
+
+// Helpers
+import { logInfo } from './utils.helper';
 
 /**
  * @description Creates a new role in the guild.

@@ -1,4 +1,7 @@
+// Discord
 import { Message } from 'discord.js';
+
+// Helpers
 import { getInvite } from '../helpers/invite.helper';
 import { checkMember, getUserByUsername } from '../helpers/member.helper';
 

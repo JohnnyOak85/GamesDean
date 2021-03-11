@@ -1,5 +1,11 @@
+// Discord
 import { Message } from 'discord.js';
-import { checkMember, warnUser } from '../helpers/member.helper';
+
+// Helpers
+import { checkMember } from '../helpers/member.helper';
+import { warnUser } from '../helpers/punishment.helper';
+
+// Configurations
 import { MAX_STRIKES } from '../config.json';
 
 module.exports = {

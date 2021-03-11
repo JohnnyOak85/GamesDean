@@ -1,11 +1,17 @@
-// Discord
+// Dependencies
 import { Guild, GuildChannel, GuildChannelManager, NewsChannel, PermissionOverwriteOption, Role, TextChannel } from 'discord.js';
 
 // Helpers
 import { logInfo } from './utils.helper';
 
+// Models
+import { ChannelSchema } from '../models/channel.model';
+
 // Configurations
-import { PERMISSIONS, RULES } from '../config.json';
+import { RULE_LIST } from '../config.json';
+
+// Resources
+import { EVENTS, INFORMATION, RULES } from '../resources/channels';
 
 /**
  * @description Sends a message with the rules list to the system channel.
@@ -42,22 +48,14 @@ const setRules = async (channel: TextChannel | NewsChannel | null | undefined, r
  * @param category
  * @param system
  */
-const buildInfoChannel = async (
-  guild: Guild,
-  channelSchema: ChannelSchema,
-  category: GuildChannel,
-  system?: boolean
-): Promise<void> => {
+const buildInfoChannel = async (guild: Guild, channelSchema: ChannelSchema, system?: boolean): Promise<void> => {
   try {
     const channel = await getChannel(guild.channels, channelSchema, guild.systemChannel);
 
     if (!channel) return;
 
-    channel.setParent(category.id);
-    channel.overwritePermissions(category.permissionOverwrites);
-
     if (system) guild.setSystemChannel(channel);
-    else if (channel.isText()) setRules(channel, RULES);
+    else if (channel.isText()) setRules(channel, RULE_LIST);
   } catch (error) {
     throw error;
   }
@@ -69,14 +67,15 @@ const buildInfoChannel = async (
  */
 const buildInfoCategory = async (guild: Guild): Promise<void> => {
   try {
-    const category = await getChannel(guild.channels, { name: 'information', type: 'category' }, guild.systemChannel);
+    const category = await getChannel(guild.channels, INFORMATION, guild.systemChannel);
 
     if (!category) return;
 
-    category.setPosition(0);
-    category.updateOverwrite(guild.roles.everyone, PERMISSIONS);
-    buildInfoChannel(guild, { name: 'rules', type: 'text' }, category);
-    buildInfoChannel(guild, { name: 'events', type: 'text' }, category, true);
+    RULES.options.parent = category.id;
+    EVENTS.options.parent = category.id;
+
+    buildInfoChannel(guild, RULES);
+    buildInfoChannel(guild, EVENTS, true);
   } catch (error) {
     throw error;
   }
@@ -95,9 +94,7 @@ const createChannel = async (
   try {
     if (!channelManager) return;
 
-    const channel = await channelManager.create(channelSchema.name, {
-      type: channelSchema.type
-    });
+    const channel = await channelManager.create(channelSchema.name, channelSchema.options);
 
     systemChannel?.send(`Created new channel <#${channel?.id}>!`);
     logInfo(`Created channel ${channelSchema.name} on ${channelManager?.guild.name}.`);
@@ -131,6 +128,12 @@ const getChannel = async (
   }
 };
 
+/**
+ * @description Updates permissions of a channel by given role.
+ * @param channelManager
+ * @param role
+ * @param permissions
+ */
 const updatePermissions = async (channelManager: GuildChannelManager, role: Role, permissions: PermissionOverwriteOption) => {
   for (const channel of channelManager?.cache.array()) {
     channel.updateOverwrite(role, permissions);

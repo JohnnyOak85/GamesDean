@@ -1,6 +1,6 @@
 interface UserDoc {
   _id?: string;
-  banned?: boolean;
+  anniversary?: Date;
   nickname?: string | null;
   roles?: string[];
   strikes?: string[];

@@ -1,8 +1,13 @@
-// Moment
+// Dependencies
 import moment, { unitOfTime } from 'moment';
-
-// Winston
 import { createLogger, format, transports } from 'winston';
+
+const logger = createLogger({
+  level: 'info',
+  format: format.printf((log) => `[${log.level.toUpperCase()}] - ${log.message}`),
+  defaultMeta: { service: 'user-service' },
+  transports: [new transports.File({ filename: 'logs/log.txt' })]
+});
 
 /**
  * @description Returns a timestamp from the current date until the amount and type of time given.
@@ -14,7 +19,7 @@ const addTime = (type: unitOfTime.DurationConstructor, amount: number): string =
 /**
  * @description Returns the current date.
  */
-const getDate = (date = new Date()): string => moment(date).format('Do MMMM YYYY, h:mm:ss a');
+const getDate = (date = new Date(), format = 'Do MMMM YYYY, h:mm:ss a'): string => moment(date).format(format);
 
 /**
  * @description Transforms the given number string into a number.
@@ -25,16 +30,6 @@ const getNumber = (amount: string): number | undefined => {
 
   if (number && number > 0 && number < 100 && !isNaN(number)) return number;
 };
-
-/**
- * @description Creates a new logger entity.
- */
-const logger = createLogger({
-  level: 'info',
-  format: format.printf((log) => `[${log.level.toUpperCase()}] - ${log.message}`),
-  defaultMeta: { service: 'user-service' },
-  transports: [new transports.File({ filename: 'logs/log.txt' })]
-});
 
 /**
  * @description Logs an error entry.

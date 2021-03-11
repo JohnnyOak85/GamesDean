@@ -5,7 +5,7 @@ import { Message } from 'discord.js';
 import { setRules } from '../helpers/channels.helper';
 
 // Configurations
-import { RULES } from '../config.json';
+import { RULE_LIST } from '../config.json';
 
 module.exports = {
   name: 'rule',
@@ -23,9 +23,9 @@ module.exports = {
 
       if (!channel) message.guild?.systemChannel?.send(`I don't seem to have a rules channel!`);
 
-      RULES.push(args[0]);
+      RULE_LIST.push(args[0]);
 
-      setRules(channel, RULES);
+      setRules(channel, RULE_LIST);
     } catch (error) {
       throw error;
     }

@@ -1,14 +1,17 @@
 // Dependencies
-import { ClientUser, Guild, Role, RoleManager, TextChannel } from 'discord.js';
+import { ClientUser, Guild, GuildMember, Role, RoleManager, TextChannel } from 'discord.js';
 
 // Helpers
-import { logInfo } from './utils.helper';
+import { updatePermissions } from './channels.helper';
+import { getUser } from './member.helper';
+import { saveDoc } from './storage.helper';
+import { addTime, getNumber, logInfo } from './utils.helper';
 
 // Models
 import { RoleSchema } from '../models/role.model';
 
 // Resources
-import { BOT } from '../resources/roles';
+import { BOT, MUTED } from '../resources/roles';
 
 /**
  * @description Creates a new role in the guild.
@@ -78,4 +81,61 @@ const promote = async (guild: Guild, bot: ClientUser | null): Promise<void> => {
   }
 };
 
-export { getRole, promote };
+/**
+ * @description Gives a user the muted role, which makes it impossible to send messages to the guild.
+ * @param member
+ * @param reason
+ * @param time
+ */
+const muteUser = async (member: GuildMember, reason: string, time?: string): Promise<string | undefined> => {
+  try {
+    const user = await getUser(member);
+    const role = await getRole(member.guild.roles, MUTED, member.guild.systemChannel);
+    const minutes = getNumber(time || '');
+
+    if (!role) return;
+
+    updatePermissions(member.guild.channels, role, MUTED.inactivePermissions);
+
+    if (minutes) {
+      reason = reason.replace(minutes.toString() || '', '');
+      reason = `${reason} for ${minutes} minutes.`;
+      user.timer = addTime('minutes', minutes);
+    }
+
+    if (!user.strikes.includes(reason)) user.strikes.push(reason);
+    if (!member.roles.cache.has(role.id)) await member.roles.add(role);
+    if (!user.roles.includes(role.id)) user.roles.push(role.id);
+
+    saveDoc(`${member.guild.id}/${member.user.id}`, user);
+
+    return `${member.displayName} has been muted.\n${reason}`;
+  } catch (error) {
+    throw error;
+  }
+};
+
+/**
+ * @description Removes the mute role from the user, allowing them to once again send messages to the guild.
+ * @param member
+ */
+const unmuteUser = async (member: GuildMember): Promise<string | undefined> => {
+  try {
+    const user = await getUser(member);
+    const role = await getRole(member.guild.roles, MUTED, member.guild.systemChannel);
+
+    if (!role) return;
+
+    if (member.roles.cache.has(role.id)) await member.roles.remove(role);
+
+    if (user.roles.includes(role.id)) user.roles.splice(user.roles.indexOf(role.id), 1);
+
+    saveDoc(`${member.guild.id}/${member.user.id}`, user);
+
+    return `${member.displayName} has been unmuted.`;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export { getRole, muteUser, promote, unmuteUser };

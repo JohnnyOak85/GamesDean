@@ -3,7 +3,7 @@ import { Message } from 'discord.js';
 
 // Helpers
 import { checkMember } from '../helpers/member.helper';
-import { unmuteUser } from '../helpers/punishment.helper';
+import { unmuteUser } from '../helpers/roles.helper';
 
 module.exports = {
   name: 'unmute',

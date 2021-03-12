@@ -6,7 +6,7 @@ import { setRules } from '../helpers/channels.helper';
 import { getNumber } from '../helpers/utils.helper';
 
 // Configurations
-import { RULES } from '../config.json';
+import { RULE_LIST } from '../config.json';
 
 module.exports = {
   name: 'unrule',
@@ -33,9 +33,9 @@ module.exports = {
         return;
       }
 
-      RULES.splice(index + 1, 1);
+      RULE_LIST.splice(index + 1, 1);
 
-      setRules(channel, RULES);
+      setRules(channel, RULE_LIST);
     } catch (error) {
       throw error;
     }

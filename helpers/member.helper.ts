@@ -14,6 +14,7 @@ import { getDate } from './utils.helper';
 const buildBannedUser = (user: User, reason: string): UserDoc => {
   return {
     _id: user.id,
+    nickname: null,
     roles: [],
     strikes: [reason],
     username: user.username
@@ -27,11 +28,8 @@ const buildBannedUser = (user: User, reason: string): UserDoc => {
  */
 const ensureDoc = (user: UserDoc, member: GuildMember): UserDoc => {
   if (!user._id) user._id = member.id;
-  if (!user.anniversary) user.anniversary = undefined;
   if (!user.nickname) user.nickname = member.nickname;
-  if (!user.roles) user.roles = member.roles.cache.map((role) => role.id);
-  if (!user.strikes) user.strikes = [];
-  if (!user.timer) user.timer = undefined;
+  if (!user.roles.length) user.roles = member.roles.cache.map((role) => role.id);
   if (!user.username) user.username = member.user.username;
 
   return user;

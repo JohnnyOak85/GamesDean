@@ -52,7 +52,16 @@ const readDirectory = async (path: string): Promise<string[]> => {
  */
 const getDoc = async (path: string): Promise<UserDoc> => {
   try {
-    if (!pathExistsSync(`${DATABASE_DIR}/${path}.json`)) saveDoc(path, {});
+    if (!pathExistsSync(`${DATABASE_DIR}/${path}.json`))
+      saveDoc(path, {
+        _id: '',
+        anniversary: undefined,
+        nickname: null,
+        roles: [],
+        strikes: [],
+        timer: undefined,
+        username: ''
+      });
 
     return readJsonSync(`${DATABASE_DIR}/${path}.json`);
   } catch (error) {
